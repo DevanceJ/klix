@@ -10,11 +10,11 @@ const BOILERPLATE = {
 
   python: `# Python Boilerplate
   
-  def main():
-      print('Hello, World!')
-  
-  main()
-  `,
+def main():
+  print('Hello, World!')
+
+main()
+`,
 
   java: `// Java Boilerplate
   
@@ -34,7 +34,17 @@ const BOILERPLATE = {
       cout << "Hello, World!" << endl;
       return 0;
   }
-  `
+  `,
 };
 
 export default BOILERPLATE;
+
+// GET /api/v2/runtimes <- modify to call from this endpoint for versions
+// Hardcoded for now to test functionality
+
+export const LANGUAGE_VERSIONS = {
+  python: "3.10.0",
+  javascript: "18.5.0",
+  java: "15.0.2",
+  cpp: "10.2.0",
+};

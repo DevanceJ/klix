@@ -16,8 +16,8 @@ export function LangSelect({ language, onSelect }) {
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectItem value="javascript">javascript</SelectItem>
           <SelectItem value="python">python</SelectItem>
+          <SelectItem value="javascript">javascript</SelectItem>
           <SelectItem value="java">java</SelectItem>
           <SelectItem value="cpp">cpp</SelectItem>
         </SelectGroup>
