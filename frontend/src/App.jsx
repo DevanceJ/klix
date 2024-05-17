@@ -1,5 +1,12 @@
+import "./App.css";
+import { ThemeProvider } from "./components/ui/theme-provider";
+import Interview from "./pages/Interview";
 const App = () => {
-  return <div className="">App</div>;
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      {<Interview />}
+    </ThemeProvider>
+  );
 };
 
 export default App;
