@@ -1,17 +1,30 @@
 import Editor from "@monaco-editor/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { socket } from "@/socket";
 import { LangSelect } from "@/components/lang-select";
 import BOILERPLATE from "@/contants";
 import Output from "./output";
 
 const CodeEditor = () => {
   const editorRef = useRef(null);
-  const [code, setcode] = useState(BOILERPLATE.python);
+  const [code, setCode] = useState(BOILERPLATE.python);
   const [language, setlanguage] = useState("python");
   const onLangChange = (value) => {
     setlanguage(value);
-    setcode(BOILERPLATE[value]);
+    setCode(BOILERPLATE[value]);
   };
+
+  useEffect(() => {
+    socket.on("code-change", (message) => {
+      setCode(message);
+    });
+  });
+
+  const setCodeAndEmitEvent = (value) => {
+    setCode(value);
+    socket.emit("code-change", value);
+  }
+
   const handleEditorDidMount = (editor) => {
     editorRef.current = editor;
     editor.focus();
@@ -25,7 +38,7 @@ const CodeEditor = () => {
         theme="vs-dark"
         language={language}
         value={code}
-        onChange={(value) => setcode(value)}
+        onChange={(value) => setCodeAndEmitEvent(value)}
         onMount={handleEditorDidMount}
       />
 
