@@ -44,7 +44,7 @@ export default BOILERPLATE;
 
 export const LANGUAGE_VERSIONS = {
   python: "3.10.0",
-  javascript: "18.5.0",
+  javascript: "1.32.3",
   java: "15.0.2",
   cpp: "10.2.0",
 };
