@@ -8,9 +8,12 @@ const Interview = () => {
   const [users, setUsers] = useState({});
 
   useEffect(() => {
+
+
+    
     function onConnect() {
       setIsConnected(true);
-      socket.emit('set-nick', 'sam');
+      socket.emit("set-nick", "sam");
     }
 
     function onDisconnect() {
@@ -21,14 +24,14 @@ const Interview = () => {
       setUsers(users);
     }
 
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
-    socket.on('users', onUsersRecieved);
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("users", onUsersRecieved);
 
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
-      socket.off('users', onUsersRecieved);
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("users", onUsersRecieved);
     };
   }, []);
 
@@ -37,12 +40,12 @@ const Interview = () => {
       <div className="flex justify-center items-center mt-2.5 w-9">
         <div
           className={`w-3 h-3 rounded-full ${
-            isConnected ? 'bg-green-500' : 'bg-red-500'
+            isConnected ? "bg-green-500" : "bg-red-500"
           }`}
         ></div>
       </div>
       <div className=" m-4 w-3/5">
-        <CodeEditor/>
+        <CodeEditor />
       </div>
       <div className="flex flex-col gap-[54px]">
         <div className="w-[450px]">
