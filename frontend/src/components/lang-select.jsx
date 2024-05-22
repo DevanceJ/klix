@@ -19,7 +19,7 @@ export function LangSelect({ language, onSelect }) {
           <SelectItem value="python">python</SelectItem>
           <SelectItem value="javascript">javascript</SelectItem>
           <SelectItem value="java">java</SelectItem>
-          <SelectItem value="cpp">cpp</SelectItem>
+          <SelectItem value="cpp">c++</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>
