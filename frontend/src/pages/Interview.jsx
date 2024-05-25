@@ -19,7 +19,7 @@ const Interview = () => {
   const { roomId } = useParams();
   const codeRef = useRef(null);
   const languageRef = useRef("python");
-  const socketRef = useRef(null);
+  const socketRef = useRef(socket); // Initialize with socket directly
   const messageInputRef = useRef(null);
 
   useEffect(() => {
@@ -28,45 +28,46 @@ const Interview = () => {
       return;
     }
 
-    const init = () => {
-      socketRef.current = socket;
-      socketRef.current.emit("join", {
-        roomId,
-        username: location.state?.username,
-      });
+    const username = location.state?.username;
 
-      socketRef.current.on("joined", ({ clients, username, socketId }) => {
-        if (username !== location.state?.username) {
-          const joinedMessage = `${username} joined the room.`;
-          setMessages((prev) => [...prev, { message: joinedMessage }]);
-        }
-        setIsConnected(true);
-        setUsers(clients);
-        socketRef.current.emit("sync-code", {
-          socketId,
-          code: codeRef.current,
-          language: languageRef.current,
-        });
-      });
-
-      socketRef.current.on("disconnected", ({ socketId, username }) => {
-        console.log("disconnected: ", username);
-        const leftMessage = `${username} left the room.`;
-        setMessages((prev) => [...prev, { message: leftMessage }]);
-        setUsers((prev) => prev.filter((user) => user.socketId !== socketId));
-      });
-
-      socketRef.current.on("message", ({ message, username }) => {
-        setMessages((prev) => [...prev, { username, message }]);
+    const handleJoined = ({ clients, username, socketId }) => {
+      if (username !== location.state?.username) {
+        const joinedMessage = `${username} joined the room.`;
+        setMessages((prev) => [
+          ...prev,
+          { message: joinedMessage, mode: "join" },
+        ]);
+      }
+      setIsConnected(true);
+      setUsers(clients);
+      socketRef.current.emit("sync-code", {
+        socketId,
+        code: codeRef.current,
+        language: languageRef.current,
       });
     };
 
-    init();
+    const handleDisconnected = ({ socketId, username }) => {
+      console.log("disconnected: ", username);
+      const leftMessage = `${username} left the room.`;
+      setMessages((prev) => [...prev, { message: leftMessage, mode: "leave" }]);
+      setUsers((prev) => prev.filter((user) => user.socketId !== socketId));
+    };
+
+    const handleMessage = ({ message, username }) => {
+      setMessages((prev) => [...prev, { username, message, mode: "message" }]);
+    };
+
+    socketRef.current.emit("join", { roomId, username });
+
+    socketRef.current.on("joined", handleJoined);
+    socketRef.current.on("disconnected", handleDisconnected);
+    socketRef.current.on("message", handleMessage);
 
     return () => {
-      socketRef.current.off("joined");
-      socketRef.current.off("disconnected");
-      socketRef.current.off("message");
+      socketRef.current.off("joined", handleJoined);
+      socketRef.current.off("disconnected", handleDisconnected);
+      socketRef.current.off("message", handleMessage);
     };
   }, [location.state, navigate, roomId]);
 
@@ -75,15 +76,9 @@ const Interview = () => {
   }
 
   const leaveRoom = async () => {
-    // socketRef.current.emit("disconnect", {
-    //   roomId,
-    //   username: location.state?.username,
-    // });
-    socketRef.current.on("disconnected", ({ socketId, username }) => {
-      console.log("disconnected: ", username);
-      const leftMessage = `${username} left the room.`;
-      setMessages((prev) => [...prev, { message: leftMessage }]);
-      setUsers((prev) => prev.filter((user) => user.socketId !== socketId));
+    socketRef.current.emit("leave-room", {
+      roomId,
+      username: location.state?.username,
     });
     navigate("/");
   };
@@ -106,6 +101,12 @@ const Interview = () => {
         username: location.state?.username,
       });
       messageInputRef.current.value = "";
+    }
+  };
+
+  const handleInputEnter = (e) => {
+    if (e.code === "Enter") {
+      sendMessage();
     }
   };
 
@@ -165,7 +166,16 @@ const Interview = () => {
         <div className="h-[180px] border border-white rounded">
           <div className="h-full overflow-y-auto p-2">
             {messages.map((msg, index) => (
-              <div key={index} className="text-white">
+              <div
+                key={index}
+                className={` ${
+                  msg.mode === "join"
+                    ? "text-green-500"
+                    : msg.mode === "leave"
+                      ? "text-red-500"
+                      : "text-white"
+                }`}
+              >
                 {msg.username ? (
                   <>
                     <strong>{msg.username}: </strong>
@@ -180,11 +190,14 @@ const Interview = () => {
           <div className="flex mt-[15px] border-white gap-[20px]">
             <input
               ref={messageInputRef}
+              onKeyUp={handleInputEnter}
               type="text"
               placeholder="Type your message..."
               className="flex-1 p-1 rounded bg-black border border-white text-white"
             />
-            <Button onClick={sendMessage}>Send</Button>
+            <Button onClick={sendMessage} onKeyUp={handleInputEnter}>
+              Send
+            </Button>
           </div>
         </div>
       </div>
