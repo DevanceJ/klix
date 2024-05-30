@@ -64,16 +64,13 @@ io.on("connection", (socket) => {
     io.to(socketId).emit("language-change", { language });
   });
   socket.on("leave-room", ({ roomId, username }) => {
-    // Emit the 'disconnected' event to other clients in the room
     socket.in(roomId).emit("disconnected", {
       socketId: socket.id,
       username: username,
     });
 
-    // Remove the user from the room
     socket.leave(roomId);
 
-    // Optionally log the event or perform additional clean-up
     console.log(`${username} has left room ${roomId}`);
     const rooms = [...socket.rooms];
     rooms.forEach((roomId) => {
@@ -85,28 +82,6 @@ io.on("connection", (socket) => {
     delete allUsers[socket.id];
     console.log(allUsers);
   });
-
-  // socket.on("disconnecting", () => {
-  //   const rooms = [...socket.rooms];
-  //   rooms.forEach((roomId) => {
-  //     socket.in(roomId).emit("disconnected", {
-  //       socketId: socket.id,
-  //       username: allUsers[socket.id],
-  //     });
-  //   });
-  //   delete allUsers[socket.id];
-  // });
-
-  // socket.on("disconnecting", () => {
-  //   const rooms = [...socket.rooms];
-  //   rooms.forEach((roomId) => {
-  //     socket.in(roomId).emit("disconnected", {
-  //       socketId: socket.id,
-  //       username: allUsers[socket.id],
-  //     });
-  //   });
-  //   delete allUsers[socket.id];
-  // });
 });
 
 httpServer.listen(API_PORT, () => {

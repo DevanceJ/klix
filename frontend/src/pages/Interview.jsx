@@ -19,7 +19,7 @@ const Interview = () => {
   const { roomId } = useParams();
   const codeRef = useRef(null);
   const languageRef = useRef("python");
-  const socketRef = useRef(socket); // Initialize with socket directly
+  const socketRef = useRef(socket);
   const messageInputRef = useRef(null);
 
   useEffect(() => {
