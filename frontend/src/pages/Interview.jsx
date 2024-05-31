@@ -14,6 +14,10 @@ const Interview = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [localStream, setLocalStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { roomId } = useParams();
@@ -21,6 +25,7 @@ const Interview = () => {
   const languageRef = useRef("python");
   const socketRef = useRef(socket);
   const messageInputRef = useRef(null);
+  const peerConnectionRef = useRef(null);
 
   useEffect(() => {
     if (!location.state?.username) {
@@ -64,10 +69,27 @@ const Interview = () => {
     socketRef.current.on("disconnected", handleDisconnected);
     socketRef.current.on("message", handleMessage);
 
+    // Initialize media
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        setLocalStream(stream);
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+      })
+      .catch((error) => console.error("Error accessing media devices.", error));
+
     return () => {
       socketRef.current.off("joined", handleJoined);
       socketRef.current.off("disconnected", handleDisconnected);
       socketRef.current.off("message", handleMessage);
+
+      // Close peer connection
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
     };
   }, [location.state, navigate, roomId]);
 
@@ -76,10 +98,14 @@ const Interview = () => {
   }
 
   const leaveRoom = async () => {
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+    }
     socketRef.current.emit("leave-room", {
       roomId,
       username: location.state?.username,
     });
+
     navigate("/");
   };
 
@@ -145,21 +171,24 @@ const Interview = () => {
       <div className="h-full mt-8 flex flex-col gap-[50px]">
         <div className="w-[400px]">
           <AspectRatio ratio={16 / 9}>
-            <img
-              src="https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&dpr=2&q=80"
-              alt="Image"
+            <video
+              ref={localVideoRef}
+              autoPlay
+              muted
+              playsInline
               className="rounded-md object-cover"
-            />
+            ></video>
           </AspectRatio>
         </div>
 
         <div className="w-[400px]">
           <AspectRatio ratio={16 / 9}>
-            <img
-              src="https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&dpr=2&q=80"
-              alt="Image"
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
               className="rounded-md object-cover"
-            />
+            ></video>
           </AspectRatio>
         </div>
 
