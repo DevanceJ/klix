@@ -14,8 +14,9 @@ const Interview = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+
   const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
+  // const [remoteStream, setRemoteStream] = useState(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const location = useLocation();
@@ -25,7 +26,6 @@ const Interview = () => {
   const languageRef = useRef("python");
   const socketRef = useRef(socket);
   const messageInputRef = useRef(null);
-  const peerConnectionRef = useRef(null);
 
   useEffect(() => {
     if (!location.state?.username) {
@@ -84,15 +84,14 @@ const Interview = () => {
       socketRef.current.off("joined", handleJoined);
       socketRef.current.off("disconnected", handleDisconnected);
       socketRef.current.off("message", handleMessage);
-
-      // Close peer connection
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-        peerConnectionRef.current = null;
-      }
     };
   }, [location.state, navigate, roomId]);
 
+  useEffect(() => {
+    if (!users) return;
+    if (!localStream) return;
+    socketRef.current.on("joined", {});
+  }, [users, localStream]);
   if (!location.state) {
     return <Navigate to="/" />;
   }
@@ -201,8 +200,8 @@ const Interview = () => {
                   msg.mode === "join"
                     ? "text-green-500"
                     : msg.mode === "leave"
-                      ? "text-red-500"
-                      : "text-white"
+                    ? "text-red-500"
+                    : "text-white"
                 }`}
               >
                 {msg.username ? (
