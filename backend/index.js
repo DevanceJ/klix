@@ -1,3 +1,4 @@
+// backend code (same as before)
 import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
@@ -63,6 +64,7 @@ io.on("connection", (socket) => {
     io.to(socketId).emit("code-change", { code });
     io.to(socketId).emit("language-change", { language });
   });
+
   socket.on("leave-room", ({ roomId, username }) => {
     socket.in(roomId).emit("disconnected", {
       socketId: socket.id,
@@ -80,7 +82,6 @@ io.on("connection", (socket) => {
       });
     });
     delete allUsers[socket.id];
-    console.log(allUsers);
   });
 });
 
