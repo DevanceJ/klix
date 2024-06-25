@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
+import Interview from "./Interview";
+import ReactPlayer from "react-player";
 
 function Home() {
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
-
-  const navigate = useNavigate();
+  const [joined, setJoined] = useState(false);
+  const [myStream, setMyStream] = useState(null);
 
   const generateRoomId = (e) => {
     e.preventDefault();
@@ -20,11 +22,7 @@ function Home() {
       console.error("Both fields are required");
       return;
     }
-    navigate(`/code/${roomId}`, {
-      state: {
-        username,
-      },
-    });
+    setJoined(true);
     console.log("Room is created");
   };
 
@@ -34,48 +32,73 @@ function Home() {
     }
   };
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-800">
-      <div className="w-full max-w-md p-8 bg-gray-700 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center text-white mb-6">
-          Enter the ROOM ID
-        </h2>
-        <div className="mb-4">
-          <input
-            type="text"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            className="w-full px-4 py-2 mb-3 text-black border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-            placeholder="ROOM ID"
-            onKeyUp={handleInputEnter}
-          />
+  const getCam = async () => {
+    const stream = await window.navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    setMyStream(stream);
+  };
+  useEffect(() => {
+    getCam();
+  }, []);
+
+  if (!joined) {
+    return (
+      <>
+        <div className="flex-col gap-4 items-center justify-center min-h-screen bg-gray-800">
+          {myStream && (
+            <ReactPlayer
+              height="100px"
+              width="200px"
+              playing
+              muted
+              url={myStream}
+            />
+          )}
+          <div className="w-full max-w-md p-8 bg-gray-700 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold text-center text-white mb-6">
+              Enter the ROOM ID
+            </h2>
+            <div className="mb-4">
+              <input
+                type="text"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                className="w-full px-4 py-2 mb-3 text-black border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="ROOM ID"
+                onKeyUp={handleInputEnter}
+              />
+            </div>
+            <div className="mb-4">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-2 mb-3 text-black border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="USERNAME"
+                onKeyUp={handleInputEnter}
+              />
+            </div>
+            <button
+              onClick={joinRoom}
+              className="w-full px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
+              JOIN
+            </button>
+            <p className="text-center text-white">
+              Don&apos;t have a room ID? Create{" "}
+              <span
+                onClick={generateRoomId}
+                className="text-blue-400 cursor-pointer hover:underline">
+                New Room
+              </span>
+            </p>
+          </div>
         </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-2 mb-3 text-black border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-            placeholder="USERNAME"
-            onKeyUp={handleInputEnter}
-          />
-        </div>
-        <button
-          onClick={joinRoom}
-          className="w-full px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
-          JOIN
-        </button>
-        <p className="text-center text-white">
-          Don&apos;t have a room ID? Create{" "}
-          <span
-            onClick={generateRoomId}
-            className="text-blue-400 cursor-pointer hover:underline">
-            New Room
-          </span>
-        </p>
-      </div>
-    </div>
-  );
+      </>
+    );
+  }
+  return <Interview roomId={roomId} username={username} myStream={myStream} />;
 }
 
 export default Home;

@@ -63,6 +63,31 @@ io.on("connection", (socket) => {
     io.to(socketId).emit("code-change", { code });
     io.to(socketId).emit("language-change", { language });
   });
+  socket.on("offer", ({ offer, roomId }) => {
+    const clients = getAllConnectedClients(roomId);
+    const client = clients.find(({ socketId }) => socketId !== socket.id);
+    if (client) {
+      io.to(client.socketId).emit("offer", { offer });
+    }
+  });
+
+  // User sends an answer to an offer
+  socket.on("answer", ({ answer, roomId }) => {
+    const clients = getAllConnectedClients(roomId);
+    const client = clients.find(({ socketId }) => socketId !== socket.id);
+    if (client) {
+      io.to(client.socketId).emit("answer", { answer });
+    }
+  });
+
+  // User sends ICE candidate information
+  socket.on("candidate", ({ candidate, roomId }) => {
+    const clients = getAllConnectedClients(roomId);
+    const client = clients.find(({ socketId }) => socketId !== socket.id);
+    if (client) {
+      io.to(client.socketId).emit("candidate", { candidate });
+    }
+  });
   socket.on("leave-room", ({ roomId, username }) => {
     socket.in(roomId).emit("disconnected", {
       socketId: socket.id,
