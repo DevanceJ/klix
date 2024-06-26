@@ -21,11 +21,15 @@ const Interview = ({ roomId, username, myStream }) => {
   const [remoteStream, setRemoteStream] = useState(null);
   const localPeerConnectionRef = useRef(null);
   const remotePeerConnectionRef = useRef(null);
+  const iceServers = [
+    { urls: "stun:stun.l.google.com:19302" },
+    // Add TURN servers here if necessary
+  ];
 
   useEffect(() => {
     const handleJoined = async ({ clients, username: localUser, socketId }) => {
       if (localUser !== username) {
-        const joinedMessage = `${username} joined the room.`;
+        const joinedMessage = `${localUser} joined the room.`;
         setMessages((prev) => [
           ...prev,
           { message: joinedMessage, mode: "join" },
@@ -41,7 +45,10 @@ const Interview = ({ roomId, username, myStream }) => {
       });
 
       // Set up local peer connection
-      const localPeerConnection = new RTCPeerConnection();
+
+      const localPeerConnection = new RTCPeerConnection({
+        iceServers,
+      });
       localStream
         .getTracks()
         .forEach((track) => localPeerConnection.addTrack(track, localStream));
@@ -73,7 +80,9 @@ const Interview = ({ roomId, username, myStream }) => {
       localPeerConnectionRef.current = localPeerConnection;
 
       // Set up remote peer connection
-      const remotePeerConnection = new RTCPeerConnection();
+      const remotePeerConnection = new RTCPeerConnection({
+        iceServers,
+      });
       remotePeerConnection.ontrack = (event) => {
         setRemoteStream(event.streams[0]);
       };
