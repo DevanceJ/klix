@@ -9,6 +9,7 @@ function Home() {
   const [username, setUsername] = useState("");
   const [joined, setJoined] = useState(false);
   const [myStream, setMyStream] = useState(null);
+  const [isPlayerOn, setIsPlayerOn] = useState(true);
 
   const generateRoomId = (e) => {
     e.preventDefault();
@@ -32,6 +33,16 @@ function Home() {
     }
   };
 
+  const previewCamera = () => {
+    setIsPlayerOn(!isPlayerOn);
+    if (isPlayerOn) {
+      setMyStream(null);
+    }
+    if (!isPlayerOn) {
+      getCam();
+    }
+  };
+
   const getCam = async () => {
     const stream = await window.navigator.mediaDevices.getUserMedia({
       video: true,
@@ -46,16 +57,22 @@ function Home() {
   if (!joined) {
     return (
       <>
-        <div className="flex-col gap-4 items-center justify-center min-h-screen bg-gray-800">
-          {myStream && (
+        <div className=" flex flex-col gap-4 items-center justify-center min-h-screen bg-gray-800">
+          {myStream && isPlayerOn && (
             <ReactPlayer
-              height="100px"
-              width="200px"
+              height="300px"
+              width="600px"
               playing
               muted
               url={myStream}
             />
           )}
+          <button
+            onClick={previewCamera}
+            className=" px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600"
+          >
+            {isPlayerOn ? "Turn Off Preview" : "Turn On Preview"}
+          </button>
           <div className="w-full max-w-md p-8 bg-gray-700 rounded-lg shadow-lg">
             <h2 className="text-2xl font-bold text-center text-white mb-6">
               Enter the ROOM ID
@@ -82,14 +99,16 @@ function Home() {
             </div>
             <button
               onClick={joinRoom}
-              className="w-full px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
+              className="w-full px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600"
+            >
               JOIN
             </button>
             <p className="text-center text-white">
               Don&apos;t have a room ID? Create{" "}
               <span
                 onClick={generateRoomId}
-                className="text-blue-400 cursor-pointer hover:underline">
+                className="text-blue-400 cursor-pointer hover:underline"
+              >
                 New Room
               </span>
             </p>

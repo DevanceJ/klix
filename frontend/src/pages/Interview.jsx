@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import ReactPlayer from "react-player";
 import { useLocation, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import Chat from "@/components/Chat/Chat";
+import SplitPane from "react-split-pane";
 
 const Interview = ({ roomId, username, myStream }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -178,7 +185,7 @@ const Interview = ({ roomId, username, myStream }) => {
       roomId,
       username,
     });
-    navigate("/about");
+    navigate("/");
   };
 
   const copyRoomId = async () => {
@@ -214,7 +221,8 @@ const Interview = ({ roomId, username, myStream }) => {
         <div
           className={`w-3 h-3 rounded-full ${
             isConnected ? "bg-green-500" : "bg-red-500"
-          }`}></div>
+          }`}
+        ></div>
       </div>
       <div className="flex items-center gap-2">
         <p onClick={copyRoomId} className="text-white">
@@ -222,7 +230,8 @@ const Interview = ({ roomId, username, myStream }) => {
         </p>
         <button
           onClick={leaveRoom}
-          className="px-2 py-1 text-white bg-red-500 rounded-md">
+          className="px-2 py-1 text-white bg-red-500 rounded-md"
+        >
           Leave
         </button>
       </div>
@@ -238,7 +247,8 @@ const Interview = ({ roomId, username, myStream }) => {
           }}
         />
       </div>
-      <div className="h-full mt-8 flex flex-col gap-[50px]">
+
+      <div className="h-full flex flex-col gap-[10px]">
         <ReactPlayer
           height="300px"
           width="400px"
@@ -246,45 +256,31 @@ const Interview = ({ roomId, username, myStream }) => {
           muted
           url={localStream}
         />
-
-        <ReactPlayer height="300px" width="400px" playing url={remoteStream} />
-
-        <div className="h-[180px] border border-white rounded">
-          <div className="h-full overflow-y-auto p-2">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={` ${
-                  msg.mode === "join"
-                    ? "text-green-500"
-                    : msg.mode === "leave"
-                    ? "text-red-500"
-                    : "text-white"
-                }`}>
-                {msg.username ? (
-                  <>
-                    <strong>{msg.username}: </strong>
-                    {msg.message}
-                  </>
-                ) : (
-                  <>{msg.message}</>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex mt-[15px] border-white gap-[20px]">
-            <input
-              ref={messageInputRef}
-              onKeyUp={handleInputEnter}
-              type="text"
-              placeholder="Type your message..."
-              className="flex-1 p-1 rounded bg-black border border-white text-white"
+        {remoteStream ? (
+          <>
+            <ReactPlayer
+              height="300px"
+              width="400px"
+              playing
+              url={remoteStream}
             />
-            <Button onClick={sendMessage} onKeyUp={handleInputEnter}>
-              Send
-            </Button>
-          </div>
-        </div>
+            <Chat
+              messages={messages}
+              messageInputRef={messageInputRef}
+              sendMessage={sendMessage}
+              handleInputEnter={handleInputEnter}
+            />
+          </>
+        ) : (
+          <>
+            <Chat
+              messages={messages}
+              sendMessage={sendMessage}
+              handleInputEnter={handleInputEnter}
+              messageInputRef={messageInputRef}
+            />
+          </>
+        )}
       </div>
     </div>
   );
