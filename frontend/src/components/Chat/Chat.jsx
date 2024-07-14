@@ -25,8 +25,7 @@ const Chat = ({ messageInputRef, sendMessage, handleInputEnter, messages }) => {
                 : msg.mode === "leave"
                 ? "text-red-500"
                 : "text-white"
-            }`}
-          >
+            }`}>
             {msg.username ? (
               <>
                 <strong>{msg.username}: </strong>
@@ -45,7 +44,7 @@ const Chat = ({ messageInputRef, sendMessage, handleInputEnter, messages }) => {
           onKeyUp={handleInputEnter}
           type="text"
           placeholder="Type your message..."
-          className="flex-1 p-1 rounded bg-black border border-white text-white"
+          className="flex-1 p-1 rounded bg-black border border-white text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
         />
         <Button onClick={sendMessage} onKeyUp={handleInputEnter}>
           Send

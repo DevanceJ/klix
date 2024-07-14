@@ -12,7 +12,8 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import Chat from "@/components/Chat/Chat";
-import SplitPane from "react-split-pane";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Interview = ({ roomId, username, myStream }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -28,10 +29,8 @@ const Interview = ({ roomId, username, myStream }) => {
   const [remoteStream, setRemoteStream] = useState(null);
   const localPeerConnectionRef = useRef(null);
   const remotePeerConnectionRef = useRef(null);
-  const iceServers = [
-    { urls: "stun:stun.l.google.com:19302" },
-    // Add TURN servers here if necessary
-  ];
+  const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+  const candidateQueue = useRef([]);
 
   useEffect(() => {
     const handleJoined = async ({ clients, username: localUser, socketId }) => {
@@ -71,9 +70,7 @@ const Interview = ({ roomId, username, myStream }) => {
 
       localPeerConnection
         .createOffer()
-        .then((offer) => {
-          return localPeerConnection.setLocalDescription(offer);
-        })
+        .then((offer) => localPeerConnection.setLocalDescription(offer))
         .then(() => {
           socketRef.current.emit("offer", {
             offer: localPeerConnection.localDescription,
@@ -113,14 +110,23 @@ const Interview = ({ roomId, username, myStream }) => {
         .then(() => {
           return remotePeerConnection.createAnswer();
         })
-        .then((answer) => {
-          return remotePeerConnection.setLocalDescription(answer);
-        })
+        .then((answer) => remotePeerConnection.setLocalDescription(answer))
         .then(() => {
           socketRef.current.emit("answer", {
             answer: remotePeerConnection.localDescription,
             roomId,
           });
+        })
+        .then(() => {
+          // Process any queued ICE candidates
+          candidateQueue.current.forEach((candidate) => {
+            remotePeerConnection
+              .addIceCandidate(new RTCIceCandidate(candidate))
+              .catch((error) => {
+                console.error("Error adding received ICE candidate", error);
+              });
+          });
+          candidateQueue.current = [];
         })
         .catch((error) => {
           console.error("Error handling offer:", error);
@@ -131,6 +137,17 @@ const Interview = ({ roomId, username, myStream }) => {
       const localPeerConnection = localPeerConnectionRef.current;
       localPeerConnection
         .setRemoteDescription(new RTCSessionDescription(answer))
+        .then(() => {
+          // Process any queued ICE candidates
+          candidateQueue.current.forEach((candidate) => {
+            localPeerConnection
+              .addIceCandidate(new RTCIceCandidate(candidate))
+              .catch((error) => {
+                console.error("Error adding received ICE candidate", error);
+              });
+          });
+          candidateQueue.current = [];
+        })
         .catch((error) => {
           console.error("Error handling answer:", error);
         });
@@ -139,18 +156,28 @@ const Interview = ({ roomId, username, myStream }) => {
     const handleCandidate = ({ candidate }) => {
       const peerConnection =
         localPeerConnectionRef.current || remotePeerConnectionRef.current;
-      peerConnection
-        .addIceCandidate(new RTCIceCandidate(candidate))
-        .catch((error) => {
-          console.error("Error adding received ICE candidate", error);
-        });
+      if (peerConnection.remoteDescription) {
+        peerConnection
+          .addIceCandidate(new RTCIceCandidate(candidate))
+          .catch((error) => {
+            console.error("Error adding received ICE candidate", error);
+          });
+      } else {
+        candidateQueue.current.push(candidate);
+      }
     };
 
     const handleDisconnected = ({ socketId, username: disconnectedUser }) => {
-      console.log("disconnected: ", disconnectedUser);
+      // console.log("disconnected: ", disconnectedUser);
       const leftMessage = `${disconnectedUser} left the room.`;
       setMessages((prev) => [...prev, { message: leftMessage, mode: "leave" }]);
       setUsers((prev) => prev.filter((user) => user.socketId !== socketId));
+      if (
+        remotePeerConnectionRef.current &&
+        remotePeerConnectionRef.current.remoteDescription
+      ) {
+        setRemoteStream(null);
+      }
     };
 
     const handleMessage = ({ message, username: sender }) => {
@@ -160,6 +187,28 @@ const Interview = ({ roomId, username, myStream }) => {
       ]);
     };
 
+    const fullRoom = (message) => {
+      // toast.error("Room is full. Please try again later.");
+      toast.warn(message, {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    };
+    const handleBeforeUnload = () => {
+      socketRef.current.emit("leave-room", {
+        roomId,
+        username,
+      });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     socketRef.current.emit("join", { roomId, username });
 
     socketRef.current.on("joined", handleJoined);
@@ -168,6 +217,7 @@ const Interview = ({ roomId, username, myStream }) => {
     socketRef.current.on("candidate", handleCandidate);
     socketRef.current.on("disconnected", handleDisconnected);
     socketRef.current.on("message", handleMessage);
+    socketRef.current.on("room-full", fullRoom);
 
     return () => {
       socketRef.current.off("joined", handleJoined);
@@ -175,17 +225,20 @@ const Interview = ({ roomId, username, myStream }) => {
       socketRef.current.off("answer", handleAnswer);
       socketRef.current.off("candidate", handleCandidate);
       socketRef.current.off("disconnected", handleDisconnected);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      socketRef.current.on("room-full", fullRoom);
       // eslint-disable-next-line react-hooks/exhaustive-deps
       socketRef.current.off("message", handleMessage);
     };
-  }, [localStream, location.state, navigate, roomId, username]);
+  }, [iceServers, localStream, location.state, navigate, roomId, username]);
 
   const leaveRoom = async () => {
     socketRef.current.emit("leave-room", {
       roomId,
       username,
     });
-    navigate("/");
+    // refresh the page
+    window.location.reload();
   };
 
   const copyRoomId = async () => {
@@ -221,8 +274,7 @@ const Interview = ({ roomId, username, myStream }) => {
         <div
           className={`w-3 h-3 rounded-full ${
             isConnected ? "bg-green-500" : "bg-red-500"
-          }`}
-        ></div>
+          }`}></div>
       </div>
       <div className="flex items-center gap-2">
         <p onClick={copyRoomId} className="text-white">
@@ -230,8 +282,7 @@ const Interview = ({ roomId, username, myStream }) => {
         </p>
         <button
           onClick={leaveRoom}
-          className="px-2 py-1 text-white bg-red-500 rounded-md"
-        >
+          className="px-2 py-1 text-white bg-red-500 rounded-md">
           Leave
         </button>
       </div>
@@ -282,6 +333,7 @@ const Interview = ({ roomId, username, myStream }) => {
           </>
         )}
       </div>
+      <ToastContainer />
     </div>
   );
 };

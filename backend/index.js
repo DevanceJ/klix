@@ -31,9 +31,10 @@ io.on("connection", (socket) => {
       return;
     }
     allUsers[socket.id] = username;
-    console.log("join: ", username);
+    // console.log("join: ", username);
     socket.join(roomId);
     const clients = getAllConnectedClients(roomId);
+    console.log(clients.length);
     clients.forEach(({ socketId }) => {
       io.to(socketId).emit("joined", {
         clients,
@@ -44,22 +45,22 @@ io.on("connection", (socket) => {
   });
 
   socket.on("message", ({ roomId, message, username }) => {
-    console.log(`message from ${username} in room ${roomId}: `, message);
+    // console.log(`message from ${username} in room ${roomId}: `, message);
     io.to(roomId).emit("message", { message, username });
   });
 
   socket.on("code-change", ({ roomId, code }) => {
-    console.log("code-change: ", code);
+    // console.log("code-change: ", code);
     socket.in(roomId).emit("code-change", { code });
   });
 
   socket.on("language-change", ({ roomId, language }) => {
-    console.log("language-change: ", language);
+    // console.log("language-change: ", language);
     socket.in(roomId).emit("language-change", { language });
   });
 
   socket.on("sync-code", ({ socketId, code, language }) => {
-    console.log("sync: ", code, language);
+    // console.log("sync: ", code, language);
     io.to(socketId).emit("code-change", { code });
     io.to(socketId).emit("language-change", { language });
   });
@@ -96,7 +97,7 @@ io.on("connection", (socket) => {
 
     socket.leave(roomId);
 
-    console.log(`${username} has left room ${roomId}`);
+    // console.log(`${username} has left room ${roomId}`);
     const rooms = [...socket.rooms];
     rooms.forEach((roomId) => {
       socket.in(roomId).emit("disconnected", {
@@ -105,7 +106,7 @@ io.on("connection", (socket) => {
       });
     });
     delete allUsers[socket.id];
-    console.log(allUsers);
+    // console.log(allUsers);
   });
 });
 
