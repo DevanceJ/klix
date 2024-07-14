@@ -12,8 +12,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import Chat from "@/components/Chat/Chat";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 const Interview = ({ roomId, username, myStream }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -187,19 +185,6 @@ const Interview = ({ roomId, username, myStream }) => {
       ]);
     };
 
-    const fullRoom = (message) => {
-      // toast.error("Room is full. Please try again later.");
-      toast.warn(message, {
-        position: "top-right",
-        autoClose: 4000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
-    };
     const handleBeforeUnload = () => {
       socketRef.current.emit("leave-room", {
         roomId,
@@ -217,7 +202,6 @@ const Interview = ({ roomId, username, myStream }) => {
     socketRef.current.on("candidate", handleCandidate);
     socketRef.current.on("disconnected", handleDisconnected);
     socketRef.current.on("message", handleMessage);
-    socketRef.current.on("room-full", fullRoom);
 
     return () => {
       socketRef.current.off("joined", handleJoined);
@@ -226,7 +210,6 @@ const Interview = ({ roomId, username, myStream }) => {
       socketRef.current.off("candidate", handleCandidate);
       socketRef.current.off("disconnected", handleDisconnected);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      socketRef.current.on("room-full", fullRoom);
       // eslint-disable-next-line react-hooks/exhaustive-deps
       socketRef.current.off("message", handleMessage);
     };
@@ -333,7 +316,6 @@ const Interview = ({ roomId, username, myStream }) => {
           </>
         )}
       </div>
-      <ToastContainer />
     </div>
   );
 };

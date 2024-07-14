@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { v4 as uuid } from "uuid";
 // import { useNavigate } from "react-router-dom";
 import Interview from "./Interview";
 import ReactPlayer from "react-player";
+import { socket } from "@/socket";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function Home() {
   const [roomId, setRoomId] = useState("");
@@ -10,6 +13,7 @@ function Home() {
   const [joined, setJoined] = useState(false);
   const [myStream, setMyStream] = useState(null);
   const [isPlayerOn, setIsPlayerOn] = useState(true);
+  const socketRef = useRef(socket);
 
   const generateRoomId = (e) => {
     e.preventDefault();
@@ -23,8 +27,7 @@ function Home() {
       console.error("Both fields are required");
       return;
     }
-    setJoined(true);
-    console.log("Room is created");
+    socketRef.current.emit("is-room-full", { roomId });
   };
 
   const handleInputEnter = (e) => {
@@ -35,12 +38,6 @@ function Home() {
 
   const previewCamera = () => {
     setIsPlayerOn(!isPlayerOn);
-    if (isPlayerOn) {
-      setMyStream(null);
-    }
-    if (!isPlayerOn) {
-      getCam();
-    }
   };
 
   const getCam = async () => {
@@ -52,6 +49,27 @@ function Home() {
   };
   useEffect(() => {
     getCam();
+    const handleFullRoom = ({ message }) => {
+      // toast.error("Room is full. Please try again later.");
+      toast.warn(message, {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    };
+    socketRef.current.on("room-full", handleFullRoom);
+    socketRef.current.on("room-not-full", () => {
+      setJoined(true);
+    });
+    return () => {
+      socketRef.current.off("room-full", handleFullRoom);
+      socketRef.current.off("room-not-full");
+    };
   }, []);
 
   if (!joined) {
@@ -69,8 +87,7 @@ function Home() {
           )}
           <button
             onClick={previewCamera}
-            className=" px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600"
-          >
+            className=" px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
             {isPlayerOn ? "Turn Off Preview" : "Turn On Preview"}
           </button>
           <div className="w-full max-w-md p-8 bg-gray-700 rounded-lg shadow-lg">
@@ -99,20 +116,19 @@ function Home() {
             </div>
             <button
               onClick={joinRoom}
-              className="w-full px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600"
-            >
+              className="w-full px-4 py-2 mb-4 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
               JOIN
             </button>
             <p className="text-center text-white">
               Don&apos;t have a room ID? Create{" "}
               <span
                 onClick={generateRoomId}
-                className="text-blue-400 cursor-pointer hover:underline"
-              >
+                className="text-blue-400 cursor-pointer hover:underline">
                 New Room
               </span>
             </p>
           </div>
+          <ToastContainer />
         </div>
       </>
     );

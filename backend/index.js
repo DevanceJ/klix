@@ -44,6 +44,15 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("is-room-full", ({ roomId }) => {
+    const clients = getAllConnectedClients(roomId);
+    if (clients.length >= 2) {
+      io.to(socket.id).emit("room-full", { message: "Room is full" });
+    } else {
+      io.to(socket.id).emit("room-not-full", { message: "Room is not full" });
+    }
+  });
+
   socket.on("message", ({ roomId, message, username }) => {
     // console.log(`message from ${username} in room ${roomId}: `, message);
     io.to(roomId).emit("message", { message, username });
