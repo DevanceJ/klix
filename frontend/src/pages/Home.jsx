@@ -53,7 +53,7 @@ function Home() {
       // toast.error("Room is full. Please try again later.");
       toast.warn(message, {
         position: "top-right",
-        autoClose: 4000,
+        autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import ReactPlayer from "react-player";
 import { useLocation, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -50,9 +52,7 @@ const Interview = ({ roomId, username, myStream }) => {
 
       // Set up local peer connection
 
-      const localPeerConnection = new RTCPeerConnection({
-        iceServers,
-      });
+      const localPeerConnection = new RTCPeerConnection({ iceServers });
       localStream
         .getTracks()
         .forEach((track) => localPeerConnection.addTrack(track, localStream));
@@ -82,9 +82,7 @@ const Interview = ({ roomId, username, myStream }) => {
       localPeerConnectionRef.current = localPeerConnection;
 
       // Set up remote peer connection
-      const remotePeerConnection = new RTCPeerConnection({
-        iceServers,
-      });
+      const remotePeerConnection = new RTCPeerConnection({ iceServers });
       remotePeerConnection.ontrack = (event) => {
         setRemoteStream(event.streams[0]);
       };
@@ -213,7 +211,7 @@ const Interview = ({ roomId, username, myStream }) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       socketRef.current.off("message", handleMessage);
     };
-  }, [iceServers, localStream, location.state, navigate, roomId, username]);
+  }, [localStream, location.state, navigate, roomId, username]);
 
   const leaveRoom = async () => {
     socketRef.current.emit("leave-room", {
@@ -227,9 +225,28 @@ const Interview = ({ roomId, username, myStream }) => {
   const copyRoomId = async () => {
     try {
       await navigator.clipboard.writeText(roomId);
-      console.log(`roomId is copied`);
+      toast.success("Room Id copied to clipboard", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
     } catch (error) {
-      console.error("Unable to copy the room Id", error);
+      // console.error("Unable to copy the room Id", error);
+      toast.error("Unable to copy the room Id", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
     }
   };
 
@@ -260,12 +277,12 @@ const Interview = ({ roomId, username, myStream }) => {
           }`}></div>
       </div>
       <div className="flex items-center gap-2">
-        <p onClick={copyRoomId} className="text-white">
-          Room ID: {roomId}
+        <p onClick={copyRoomId} className="text-white cursor-pointer">
+          Room ID: <span className="hover:underline">{roomId}</span>
         </p>
         <button
           onClick={leaveRoom}
-          className="px-2 py-1 text-white bg-red-500 rounded-md">
+          className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors duration-300">
           Leave
         </button>
       </div>
@@ -316,6 +333,7 @@ const Interview = ({ roomId, username, myStream }) => {
           </>
         )}
       </div>
+      <ToastContainer />
     </div>
   );
 };
