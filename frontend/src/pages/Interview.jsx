@@ -306,6 +306,7 @@ const Interview = ({ roomId, username, myStream }) => {
           playing
           muted
           url={localStream}
+          style={{ transform: "scaleX(-1)" }}
         />
         {remoteStream ? (
           <>
@@ -314,6 +315,8 @@ const Interview = ({ roomId, username, myStream }) => {
               width="400px"
               playing
               url={remoteStream}
+              // lateral invert
+              style={{ transform: "scaleX(-1)" }}
             />
             <Chat
               messages={messages}
