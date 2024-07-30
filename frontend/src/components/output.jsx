@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { executeCode } from "../api";
+import Prop from "prop-types";
 
 const Output = ({ editorRef, language }) => {
   const [output, setOutput] = useState(null);
@@ -60,6 +61,11 @@ const Output = ({ editorRef, language }) => {
       </div>
     </div>
   );
+};
+
+Output.propTypes = {
+  editorRef: Prop.object.isRequired,
+  language: Prop.string.isRequired,
 };
 
 export default Output;

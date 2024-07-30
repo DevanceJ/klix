@@ -1,12 +1,15 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react/prop-types */
 import Editor from "@monaco-editor/react";
 import { useState, useRef, useEffect } from "react";
 import { LangSelect } from "@/components/lang-select";
 import BOILERPLATE from "@/contants";
 import Output from "./output";
 import Prop from "prop-types";
-const CodeEditor = ({ socketRef, roomId, onCodeChange, onLanguageChange }) => {
+const CodeEditor = ({
+  socketRef,
+  roomId,
+  onCodeChange = () => {},
+  onLanguageChange = () => {},
+}) => {
   const editorRef = useRef(null);
   const [code, setCode] = useState(BOILERPLATE["python"]);
   const [language, setLanguage] = useState("python");
@@ -49,7 +52,7 @@ const CodeEditor = ({ socketRef, roomId, onCodeChange, onLanguageChange }) => {
       socketRef.current.off("code-change");
       socketRef.current.off("language-change");
     };
-  }, [socketRef.cuurent]);
+  }, [onCodeChange, onLanguageChange, socketRef, socketRef.cuurent]);
   return (
     <div className="flex flex-col gap-4">
       <LangSelect language={language} onSelect={onLangChange} />
@@ -71,7 +74,7 @@ const CodeEditor = ({ socketRef, roomId, onCodeChange, onLanguageChange }) => {
 };
 
 CodeEditor.propTypes = {
-  // socketRef: Prop,
+  socketRef: Prop.object.isRequired,
   roomId: Prop.string,
   onCodeChange: Prop.func,
   onLanguageChange: Prop.func,
