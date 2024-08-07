@@ -29,7 +29,7 @@ const Interview = ({ roomId, username, myStream }) => {
   const [remoteStream, setRemoteStream] = useState(null);
   const localPeerConnectionRef = useRef(null);
   const remotePeerConnectionRef = useRef(null);
-  const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+  const iceServers = [{ urls: "STUN:freestun.net:3478" }];
   const candidateQueue = useRef([]);
 
   useEffect(() => {

@@ -83,6 +83,7 @@ function Home() {
               playing
               muted
               url={myStream}
+              style={{ transform: "scaleX(-1)" }}
             />
           )}
           <button
